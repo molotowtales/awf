@@ -1,0 +1,50 @@
+<?php 
+
+function awf_init() {
+  awf_wysiwyg_init();
+  drupal_add_library('system', 'drupal.ajax');
+  drupal_set_message(l('awf', 'awf/nojs/form', array('attributes' => array('class' => 'use-ajax'))));
+}
+
+function awf_menu() {
+  $items = array();
+  $items['awf/nojs/form'] = array(
+    'title' => 'awf',
+    'page callback' => 'awf_callback',
+    'page arguments' => array(1),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+  $items['awf/ajax/form'] = array(
+    'delivery callback' => 'ajax_deliver',
+  ) + $items['awf/nojs/form'];
+  
+  return $items; 
+}
+
+function awf_callback($format = 'nojs') {
+  module_load_include('inc', 'node', 'node.pages');
+  $render = node_add('article');
+  $output = drupal_render($render);
+  
+  if ($format == 'ajax') {
+    $commands = array();
+    $commands[] = ajax_command_html('#content', $output);
+    return array('#type' => 'ajax', '#commands' => $commands);
+  }
+}
+
+function awf_wysiwyg_init() {
+  foreach (filter_formats() as $format_id => $format) {
+    $profile = wysiwyg_get_profile($format_id);
+    // currently not needed:
+    /*if ($profile) {
+      // Check editor theme (and reset it if not/no longer available).
+      $theme = wysiwyg_get_editor_themes($profile, (isset($profile->settings['theme']) ? $profile->settings['theme'] : ''));
+      // Add plugin settings (first) for this text format.
+      wysiwyg_add_plugin_settings($profile);
+      // Add profile settings for this text format.
+      wysiwyg_add_editor_settings($profile, $theme);
+    }*/
+  }
+}
